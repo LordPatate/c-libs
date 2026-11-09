@@ -27,7 +27,7 @@ static struct result_or_error _ptree_push(struct node *tree, char *key, void *da
         }
     }
     if (*key) {
-        if (*key >= PTREE_NB_CHILDREN) return ERROR(PTREE_INVALID_CHAR);
+        if (*key >= PTREE_NB_CHILDREN || !valid_chars[*key]) return ERROR(PTREE_INVALID_CHAR);
         struct result_or_error push_res = _ptree_push(tree->children[*key], key + 1, data);
         if (push_res.ok == ERROR_TYPE) return push_res;
         tree->children[*key] = push_res.result;
@@ -51,7 +51,7 @@ static struct result_or_error _ptree_search(struct node *tree, char *key) {
         return ERROR(PTREE_KEY_NOT_FOUND);
     } else {
         if (*key) {
-            if (*key >= PTREE_NB_CHILDREN) return ERROR(PTREE_INVALID_CHAR);
+            if (*key >= PTREE_NB_CHILDREN || !valid_chars[*key]) return ERROR(PTREE_INVALID_CHAR);
             return _ptree_search(tree->children[*key], key + 1);
         } else {
             return RESULT(tree->data);

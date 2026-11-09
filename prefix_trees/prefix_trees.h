@@ -10,7 +10,7 @@ enum ptree_nb_children {PTREE_NB_CHILDREN = 128};
 enum ptree_error_code {
     PTREE_OK,
     PTREE_ALLOCATION_FAILED,
-    PTREE_INVALID_CHAR,
+    PTREE_INVALID_CHAR,  // Valid characters are printable ASCII
     PTREE_KEY_NOT_FOUND,
 };
 
