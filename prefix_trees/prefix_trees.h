@@ -3,7 +3,7 @@
 
 #include <stdlib.h>
 
-#include "../res_or_err/res_or_err.h"
+#include "res_or_err.h"
 
 enum ptree_nb_children {PTREE_NB_CHILDREN = 128};
 
@@ -14,14 +14,7 @@ enum ptree_error_code {
     PTREE_KEY_NOT_FOUND,
 };
 
-struct node {
-    struct node *children[PTREE_NB_CHILDREN];
-    void *data;
-};
-
-struct prefix_tree {
-    struct node *root;
-};
+struct prefix_tree;
 
 // Return a new empty prefix tree or NULL if allocation failed.
 struct prefix_tree *empty_prefix_tree();
@@ -44,5 +37,7 @@ void *ptree_fold(struct prefix_tree *tree, void *(aggregate)(void *, void *, voi
 
 // Free the data of each node and the nodes themselves.
 void ptree_free(struct prefix_tree *tree, void (*disposer)(void *));
+
+#include "prefix_trees_internals.h"
 
 #endif  // !PREFIX_TREES_H

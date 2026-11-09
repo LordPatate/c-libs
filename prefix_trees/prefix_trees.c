@@ -19,7 +19,7 @@ struct prefix_tree *empty_prefix_tree() {
     return tree;
 }
 
-struct result_or_error _ptree_push(struct node *tree, char *key, void *data) {
+static struct result_or_error _ptree_push(struct node *tree, char *key, void *data) {
     if (tree == NULL) {
         tree = _new_leaf(NULL);
         if (tree == NULL) {
@@ -46,7 +46,7 @@ enum ptree_error_code ptree_push(struct prefix_tree *tree, char *key, void *data
     }
 }
 
-struct result_or_error _ptree_search(struct node *tree, char *key) {
+static struct result_or_error _ptree_search(struct node *tree, char *key) {
     if (tree == NULL) {
         return ERROR(PTREE_KEY_NOT_FOUND);
     } else {
@@ -62,7 +62,7 @@ struct result_or_error ptree_search(struct prefix_tree *tree, char *key) {
     return _ptree_search(tree->root, key);
 }
 
-void _ptree_map(struct node *tree, void *(*transform)(void *, void *), void *context) {
+static void _ptree_map(struct node *tree, void *(*transform)(void *, void *), void *context) {
     if (tree != NULL) {
         for (int i = 0; i < PTREE_NB_CHILDREN; ++i) {
             _ptree_map(tree->children[i], transform, context);
@@ -76,7 +76,7 @@ void ptree_map(struct prefix_tree *tree, void *(*transform)(void *, void *), voi
 }
 
 
-void *_ptree_fold(struct node *tree, void *(*aggregate)(void *, void *, void *), void *initial, void *context) {
+static void *_ptree_fold(struct node *tree, void *(*aggregate)(void *, void *, void *), void *initial, void *context) {
     if (tree == NULL) {
         return initial;
     } else {
@@ -93,7 +93,7 @@ void *ptree_fold(struct prefix_tree *tree, void *(aggregate)(void *, void *, voi
 }
 
 
-void _ptree_free(struct node *tree, void (*disposer)(void *)) {
+static void _ptree_free(struct node *tree, void (*disposer)(void *)) {
     if (tree != NULL) {
         for (int i = 0; i < PTREE_NB_CHILDREN; ++i) {
             _ptree_free(tree->children[i], disposer);
