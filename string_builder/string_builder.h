@@ -11,11 +11,18 @@ enum string_builder_error {
 
 struct string_builder;
 
+// Return null if allocation failed.
 struct string_builder *new_string_builder();
+
+// Return a member of string_builder_error.
 int append(char c, struct string_builder *builder);
-// Allocate an null-terminated string containing a copy of each characters
+
+// Allocate a null-terminated string containing a copy of each character
 // appended to the string builder, in the same order.
+// Return null if allocation failed.
 char *build_string(struct string_builder *builder);
+
+// Free all associated data.
 void free_string_builder(struct string_builder *builder);
 
 #include "string_builder_internals.h"
