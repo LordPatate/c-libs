@@ -19,7 +19,7 @@ long long llong_unpack(struct result_or_error r, void (*on_error)(int, void *), 
     return unpack(r, on_error, context).as_llong;
 }
 
-double dfloat_unpack(struct result_or_error r, void (*on_error)(int, void *), void *context) {
+double double_unpack(struct result_or_error r, void (*on_error)(int, void *), void *context) {
     return unpack(r, on_error, context).as_double;
 }
 
