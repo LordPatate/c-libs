@@ -12,6 +12,11 @@ target_link_libraries(Levenshtein
 PUBLIC
     ResOrErr
 )
+target_compile_options(Levenshtein
+PUBLIC
+    -Wall
+    -Wextra
+)
 
 add_executable(TestLevenshtein)
 target_sources(TestLevenshtein
@@ -21,6 +26,16 @@ PRIVATE
 target_link_libraries(TestLevenshtein
 PUBLIC
     Levenshtein
+)
+target_compile_options(TestLevenshtein
+PUBLIC
+    -Wall
+    -Wextra
+    -g
+    )
+target_link_options(TestLevenshtein
+PUBLIC
+    -fsanitize=address
 )
 
 add_subdirectory(res_or_err)
