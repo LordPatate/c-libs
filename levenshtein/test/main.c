@@ -6,7 +6,7 @@
 void test(const char *ref, const char *compared) {
     struct result_or_error res = levenshtein(ref, compared);
     if (res.ok) {
-        size_t d = (size_t) res.result;
+        size_t d = res.result.as_ullong;
         size_t n1 = strlen(ref);
         size_t n2 = strlen(compared);
         double r1 = (double) DIFF(d, n1) / (double) n1;

@@ -61,7 +61,7 @@ struct result_or_error levenshtein(const char *str1, const char *str2) {
         .dim = {n1, n2},
     };
     if (cache.array && cache.state) {
-        result = RESULT(distance(&cache, str1, str2, 0, 0));
+        result = ULLONG_RESULT(distance(0, 0, &cache, str1, str2, threshold));
     } else {
         result = ERROR(LEVENSHTEIN_ALLOC_FAILED);
     }

@@ -8,3 +8,8 @@ target_sources(ResOrErr
         FILES
             res_or_err.h
 )
+target_compile_options(ResOrErr
+PUBLIC
+    -Wall
+    -Wextra
+)

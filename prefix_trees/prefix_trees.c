@@ -34,12 +34,12 @@ static struct result_or_error _ptree_push(struct node *tree, char *key, void *da
     } else {
         tree->data = data;
     }
-    return RESULT(tree);
+    return PTR_RESULT(tree);
 }
 enum ptree_error_code ptree_push(struct prefix_tree *tree, char *key, void *data) {
     struct result_or_error push_res = _ptree_push(tree->root, key, data);
     if (push_res.ok) {
-        tree->root = push_res.result;
+        tree->root = push_res.result.as_ptr;
         return PTREE_OK;
     } else {
         return push_res.error;
@@ -54,7 +54,7 @@ static struct result_or_error _ptree_search(struct node *tree, char *key) {
             if (*key >= PTREE_NB_CHILDREN || !valid_chars[*key]) return ERROR(PTREE_INVALID_CHAR);
             return _ptree_search(tree->children[*key], key + 1);
         } else {
-            return RESULT(tree->data);
+            return PTR_RESULT(tree->data);
         }
     }
 }
