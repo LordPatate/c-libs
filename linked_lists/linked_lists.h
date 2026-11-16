@@ -1,6 +1,8 @@
 #ifndef LINKED_LISTS_H
 #define LINKED_LISTS_H
 
+#include "res_or_err.h"
+#include <errno.h>
 #include <stdlib.h>
 
 struct list_node {
@@ -30,6 +32,26 @@ void map_list(struct list_node *head, void *(*transform)(void *, void *), void *
 // Return the result of aggregate(node.data, aggregate(...), context)
 // called recursively on each node, using initial as value for the second argument on the last node.
 void *fold_list(struct list_node *head, void *(aggregate)(void *, void *, void *), void *initial, void *context);
+
+// Return data without actually copying it.
+void *shallow_data_copier(void *data);
+
+// Can be used as disposer that does nothing when performing a shallow copy.
+void no_op(void *arg);
+
+// Return a deep copy of the list.
+// disposer() is used on already copied data when the list copy fails.
+// copy_list(head, shallow_data_copier, no_op) copies the list but not the data.
+struct result_or_error copy_list(struct list_node *head, void *copy_data(void *), void (*disposer)(void *));
+
+struct ordered_pair {
+    struct list_node *left;
+    struct list_node *right;
+    int error;  // Non-zero for errors
+};
+
+// Return a pointer to a sorted copy of the list.
+struct result_or_error linked_list_merge_sort(struct list_node *head, struct ordered_pair (*order)(struct list_node *, struct list_node *));
 
 // Free all nodes and their data.
 void free_list(struct list_node *head, void (*disposer)(void *));
