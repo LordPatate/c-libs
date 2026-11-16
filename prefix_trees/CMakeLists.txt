@@ -12,4 +12,15 @@ target_sources(PrefixTrees
 target_link_libraries(PrefixTrees
 PUBLIC
     ResOrErr
+    LinkedLists
+    StringBuilder
 )
+target_compile_options(PrefixTrees
+PUBLIC
+    -Wall
+    -Wextra
+)
+
+add_subdirectory(res_or_err)
+add_subdirectory(linked_lists)
+add_subdirectory(string_builder)

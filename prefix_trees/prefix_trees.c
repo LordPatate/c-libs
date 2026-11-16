@@ -27,10 +27,10 @@ static struct result_or_error _ptree_push(struct node *tree, char *key, void *da
         }
     }
     if (*key) {
-        if (*key >= PTREE_NB_CHILDREN || !valid_chars[*key]) return ERROR(PTREE_INVALID_CHAR);
-        struct result_or_error push_res = _ptree_push(tree->children[*key], key + 1, data);
+        if (!valid_chars[(int) *key]) return ERROR(PTREE_INVALID_CHAR);
+        struct result_or_error push_res = _ptree_push(tree->children[(int) *key], key + 1, data);
         if (push_res.ok == ERROR_TYPE) return push_res;
-        tree->children[*key] = push_res.result;
+        tree->children[(int) *key] = push_res.result.as_ptr;
     } else {
         tree->data = data;
     }
@@ -51,8 +51,8 @@ static struct result_or_error _ptree_search(struct node *tree, char *key) {
         return ERROR(PTREE_KEY_NOT_FOUND);
     } else {
         if (*key) {
-            if (*key >= PTREE_NB_CHILDREN || !valid_chars[*key]) return ERROR(PTREE_INVALID_CHAR);
-            return _ptree_search(tree->children[*key], key + 1);
+            if (!valid_chars[(int) *key]) return ERROR(PTREE_INVALID_CHAR);
+            return _ptree_search(tree->children[(int) *key], key + 1);
         } else {
             return PTR_RESULT(tree->data);
         }
@@ -60,6 +60,50 @@ static struct result_or_error _ptree_search(struct node *tree, char *key) {
 }
 struct result_or_error ptree_search(struct prefix_tree *tree, char *key) {
     return _ptree_search(tree->root, key);
+}
+
+static int _ptree_list_items(struct node *tree, struct string_builder *sb, struct list_node *sentinel) {
+    if (!tree) return PTREE_OK;
+    enum string_builder_error sb_err = STRING_BUILDER_OK;
+    enum ptree_error_code ptree_err = PTREE_OK;
+    for (
+        int i = 0; i < PTREE_NB_CHILDREN &&
+        sb_err == STRING_BUILDER_OK && ptree_err == PTREE_OK;
+        ++i
+    ) {
+        if (valid_chars[i]) {
+            sb_err = append((char) i, sb);
+            if (sb_err == STRING_BUILDER_OK) {
+                ptree_err = _ptree_list_items(tree->children[i], sb, sentinel);
+                (void) pop(sb);
+            }
+        }
+    }
+    if (ptree_err == PTREE_ALLOCATION_FAILED || sb_err == STRING_BUILDER_ALLOCATION_FAILED)
+        goto error;
+    if (tree->data) {
+        struct list_node *new_node;
+        char *key = build_string(sb);
+        if (!key) goto error;
+        struct key_value_item *item = malloc(sizeof(*item));
+        if (!item) {free(key); goto error;}
+        *item = (struct key_value_item) {.key=key, .value=tree->data};
+        new_node = insert_after(sentinel, item);
+        if (!new_node) {free(key); free(item); goto error;}
+    }
+    return PTREE_OK;
+error:
+    free_list(sentinel->next, free);
+    return PTREE_ALLOCATION_FAILED;
+}
+
+struct list_node *ptree_list_items(struct prefix_tree *tree) {
+    struct string_builder *sb = new_string_builder();
+    if (!sb) return NULL;
+    struct list_node sentinel = {0};
+    (void) _ptree_list_items(tree->root, sb, &sentinel);
+    free_string_builder(sb);
+    return sentinel.next;
 }
 
 static void _ptree_map(struct node *tree, void *(*transform)(void *, void *), void *context) {
@@ -89,7 +133,7 @@ static void *_ptree_fold(struct node *tree, void *(*aggregate)(void *, void *, v
     }
 }
 void *ptree_fold(struct prefix_tree *tree, void *(aggregate)(void *, void *, void *), void *initial, void *context) {
-    _ptree_fold(tree->root, aggregate, initial, context);
+    return _ptree_fold(tree->root, aggregate, initial, context);
 }
 
 

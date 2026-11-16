@@ -4,6 +4,8 @@
 #include <stdlib.h>
 
 #include "res_or_err.h"
+#include "linked_lists.h"
+#include "string_builder.h"
 
 enum ptree_nb_children {PTREE_NB_CHILDREN = 128};
 
@@ -26,6 +28,17 @@ enum ptree_error_code ptree_push(struct prefix_tree *tree, char *key, void *data
 // Return a pointer to the data associated with the key in the tree,
 // or an appropriate error code in case of failure.
 struct result_or_error ptree_search(struct prefix_tree *tree, char *key);
+
+// Items of the list returned by ptree_list_items().
+struct key_value_item {
+    char *key;
+    void *value;
+};
+
+// Return a linked-list of the keys that have non-nul data associated.
+// Each .data field of each list_node is a pointer to a struct key_value_item.
+// Return NULL if an allocation failed.
+struct list_node *ptree_list_items(struct prefix_tree *tree);
 
 // Modify the tree by replacing the data of each non-empty node
 // with the result of transform applied to the node and context as second argument.
