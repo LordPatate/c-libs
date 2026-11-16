@@ -9,3 +9,8 @@ target_sources(StringBuilder
         FILES
             string_builder.h
 )
+target_compile_options(StringBuilder
+PUBLIC
+    -Wall
+    -Wextra
+)

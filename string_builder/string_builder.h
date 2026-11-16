@@ -17,6 +17,9 @@ struct string_builder *new_string_builder();
 // Return a member of string_builder_error.
 int append(char c, struct string_builder *builder);
 
+// Remove the most recently appended character and return it.
+char pop(struct string_builder *builder);
+
 // Allocate a null-terminated string containing a copy of each character
 // appended to the string builder, in the same order.
 // Return null if allocation failed.

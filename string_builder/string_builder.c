@@ -25,6 +25,14 @@ int append(char c, struct string_builder *builder) {
     return STRING_BUILDER_ALLOCATION_FAILED;
 }
 
+char pop(struct string_builder *builder) {
+    struct char_list *to_free = builder->last;
+    builder->last = to_free->prev;
+    char removed = to_free->last;
+    free(to_free);
+    return removed;
+}
+
 char *build_string(struct string_builder *builder) {
     size_t total_size = builder->count;
     char *array = malloc(total_size + 1);
