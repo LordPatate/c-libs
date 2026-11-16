@@ -8,3 +8,8 @@ target_sources(LinkedLists
         FILES
             linked_lists.h
 )
+target_compile_options(LinkedLists
+PUBLIC
+    -Wall
+    -Wextra
+)
