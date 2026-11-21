@@ -11,8 +11,8 @@ struct _cache {
     size_t dim[2];
 };
 
-#define CACHE_AT(i, j) cache->array[(i) * cache->dim[0] + (j)]
-#define STATE_AT(i, j) cache->state[(i) * cache->dim[0] + (j)]
+#define CACHE_AT(i, j) cache->array[(i) * cache->dim[1] + (j)]
+#define STATE_AT(i, j) cache->state[(i) * cache->dim[1] + (j)]
 #define MIN(a, b) ((a) < (b) ? (a) : (b))
 #define MAX(a, b) ((a) > (b) ? (a) : (b))
 
