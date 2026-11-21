@@ -65,13 +65,15 @@ int main(void) {
     successes += test("abc", "def", 3); ++total;
     successes += test("abc", "", 3); ++total;
     successes += test("abc", "abcdef", 3); ++total;
+    successes += test("abc", "defabc", 3); ++total;
     successes += test("abc", "adbecf", 3); ++total;
 
     successes += test_threshold("abc", "abc", 1, 0); ++total;
-    successes += test_threshold("abc", "abcdef", 1, 1); ++total;
     successes += test_threshold("abc", "def", 2, 2); ++total;
-    successes += test_threshold("abc", "adbecf", 3, 3); ++total;
     successes += test_threshold("abc", "", 4, 3); ++total;
+    successes += test_threshold("abc", "abcdef", 1, 1); ++total;
+    successes += test_threshold("abc", "defabc", 3, 3); ++total;
+    successes += test_threshold("abc", "adbecf", 3, 3); ++total;
 
     printf(
         "\n-----------------------\n"
