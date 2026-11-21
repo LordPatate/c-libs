@@ -8,11 +8,13 @@ enum cache_state {
 struct _cache {
     size_t *array;
     enum cache_state *state;
+    size_t *thres;
     size_t dim[2];
 };
 
 #define CACHE_AT(i, j) cache->array[(i) * cache->dim[1] + (j)]
 #define STATE_AT(i, j) cache->state[(i) * cache->dim[1] + (j)]
+#define THRES_AT(i, j) cache->thres[(i) * cache->dim[1] + (j)]
 #define MIN(a, b) ((a) < (b) ? (a) : (b))
 #define MAX(a, b) ((a) > (b) ? (a) : (b))
 
@@ -23,7 +25,7 @@ static size_t distance(
     const char *str2,
     size_t threshold
 ) {
-    if (STATE_AT(i, j) == NEW) {
+    if (STATE_AT(i, j) == NEW || THRES_AT(i, j) < threshold) {
         size_t d = threshold;
         if (i == cache->dim[0]) {
             if (j == cache->dim[1]) {
@@ -50,6 +52,7 @@ static size_t distance(
         }
         CACHE_AT(i, j) = d;
         STATE_AT(i, j) = SET;
+        THRES_AT(i, j) = threshold;
     }
     return CACHE_AT(i, j);
 }
@@ -63,6 +66,7 @@ struct result_or_error partial_match_sized(
     struct _cache cache = {
         .array = calloc((n1 + 1) * (n2 + 1), sizeof(size_t)),
         .state = calloc((n1 + 1) * (n2 + 1), sizeof(size_t)),
+        .thres = calloc((n1 + 1) * (n2 + 1), sizeof(size_t)),
         .dim = {n1, n2},
     };
     if (cache.array && cache.state) {
@@ -72,6 +76,7 @@ struct result_or_error partial_match_sized(
     }
     free(cache.array);
     free(cache.state);
+    free(cache.thres);
     return result;
 }
 
