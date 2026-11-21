@@ -27,14 +27,18 @@ int test(const char *ref, const char *compared, size_t expected) {
     }
 }
 
+int test_both(const char *ref, const char *compared, size_t expected) {
+    return test(ref, compared, expected) && test(compared, ref, expected);
+}
+
 int test_threshold(const char *ref, const char *compared, size_t threshold, size_t expected) {
     struct result_or_error res = partial_match(ref, compared, threshold);
     if (res.ok) {
         size_t d = res.result.as_ullong;
         if (d == threshold) {
-            printf("not a match: %s - %s (distance >= %zu)\n", ref, compared, d);
+            printf("not a match: %s - %s (distance = %zu >= %zu)\n", ref, compared, d, threshold);
         } else {
-            printf("partial match: %s - %s (distance = %zu)\n", ref, compared, d);
+            printf("partial match: %s - %s (distance = %zu < %zu)\n", ref, compared, d, threshold);
         }
         if (d != expected)
             puts("FAILED");
@@ -45,35 +49,39 @@ int test_threshold(const char *ref, const char *compared, size_t threshold, size
     }
 }
 
+int test_both_threshold(const char *ref, const char *compared, size_t threshold, size_t expected) {
+    return test_threshold(ref, compared, threshold, expected) && test_threshold(compared, ref, threshold, expected);
+}
+
 int main(void) {
     int successes = 0, total = 0;
-    successes += test("abc", "abc", 0); ++total;
+    successes += test_both("abc", "abc", 0); ++total;
 
-    successes += test("abc", "abd", 1); ++total;
-    successes += test("abc", "adc", 1); ++total;
-    successes += test("abc", "dbc", 1); ++total;
+    successes += test_both("abc", "abd", 1); ++total;
+    successes += test_both("abc", "adc", 1); ++total;
+    successes += test_both("abc", "dbc", 1); ++total;
 
-    successes += test("abc", "ab", 1); ++total;
-    successes += test("abc", "ac", 1); ++total;
-    successes += test("abc", "bc", 1); ++total;
+    successes += test_both("abc", "ab", 1); ++total;
+    successes += test_both("abc", "ac", 1); ++total;
+    successes += test_both("abc", "bc", 1); ++total;
 
-    successes += test("abc", "abcd", 1); ++total;
-    successes += test("abc", "abdc", 1); ++total;
-    successes += test("abc", "adbc", 1); ++total;
-    successes += test("abc", "dabc", 1); ++total;
+    successes += test_both("abc", "abcd", 1); ++total;
+    successes += test_both("abc", "abdc", 1); ++total;
+    successes += test_both("abc", "adbc", 1); ++total;
+    successes += test_both("abc", "dabc", 1); ++total;
 
-    successes += test("abc", "def", 3); ++total;
-    successes += test("abc", "", 3); ++total;
-    successes += test("abc", "abcdef", 3); ++total;
-    successes += test("abc", "defabc", 3); ++total;
-    successes += test("abc", "adbecf", 3); ++total;
+    successes += test_both("abc", "def", 3); ++total;
+    successes += test_both("abc", "", 3); ++total;
+    successes += test_both("abc", "abcdef", 3); ++total;
+    successes += test_both("abc", "defabc", 3); ++total;
+    successes += test_both("abc", "adbecf", 3); ++total;
 
-    successes += test_threshold("abc", "abc", 1, 0); ++total;
-    successes += test_threshold("abc", "def", 2, 2); ++total;
-    successes += test_threshold("abc", "", 4, 3); ++total;
-    successes += test_threshold("abc", "abcdef", 1, 1); ++total;
-    successes += test_threshold("abc", "defabc", 3, 3); ++total;
-    successes += test_threshold("abc", "adbecf", 3, 3); ++total;
+    successes += test_both_threshold("abc", "abc", 1, 0); ++total;
+    successes += test_both_threshold("abc", "def", 2, 2); ++total;
+    successes += test_both_threshold("abc", "", 4, 3); ++total;
+    successes += test_both_threshold("abc", "abcdef", 1, 1); ++total;
+    successes += test_both_threshold("abc", "defabc", 3, 3); ++total;
+    successes += test_both_threshold("abc", "adbecf", 3, 3); ++total;
 
     printf(
         "\n-----------------------\n"
