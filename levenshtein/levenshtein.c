@@ -8,13 +8,11 @@ enum cache_state {
 struct _cache {
     size_t *array;
     enum cache_state *state;
-    size_t *thres;
     size_t dim[2];
 };
 
 #define CACHE_AT(i, j) cache->array[(i) * cache->dim[1] + (j)]
 #define STATE_AT(i, j) cache->state[(i) * cache->dim[1] + (j)]
-#define THRES_AT(i, j) cache->thres[(i) * cache->dim[1] + (j)]
 #define MIN(a, b) ((a) < (b) ? (a) : (b))
 #define MAX(a, b) ((a) > (b) ? (a) : (b))
 
@@ -25,34 +23,27 @@ static size_t distance(
     const char *str2,
     size_t threshold
 ) {
-    if (STATE_AT(i, j) == NEW || THRES_AT(i, j) < threshold) {
+    if (i == cache->dim[0]) {
+        return cache->dim[1] - j;
+    }
+    if (j == cache->dim[1]) {
+        return cache->dim[0] - i;
+    }
+    if (STATE_AT(i, j) == NEW || CACHE_AT(i, j) < threshold) {
         size_t d = threshold;
-        if (i == cache->dim[0]) {
-            if (j == cache->dim[1]) {
-                d = 0;
-            } else { // str2 non empty
-                d = MIN(threshold, cache->dim[1] - j);
-            }
-        } else { // str1 non empty
-            if (j == cache->dim[1]) {
-                d = MIN(threshold, cache->dim[0] - i);
-            } else { // str2 non empty
-                if (str1[i] == str2[j]) {
-                    d = distance(i + 1, j + 1, cache, str1, str2, threshold);
-                } else { // First chars differ
-                    threshold -= 1;
-                    if (threshold > 0) {
-                        size_t substitution = distance(i + 1, j + 1, cache, str1, str2, threshold);
-                        size_t delete1 = distance(i + 1, j, cache, str1, str2, threshold);
-                        size_t delete2 = distance(i, j + 1, cache, str1, str2, threshold);
-                        d = 1 + MIN(substitution, MIN(delete1, delete2));
-                    }
-                }
+        if (str1[i] == str2[j]) {
+            d = distance(i + 1, j + 1, cache, str1, str2, threshold);
+        } else { // First chars differ
+            threshold -= 1;
+            if (threshold > 0) {
+                size_t substitution = distance(i + 1, j + 1, cache, str1, str2, threshold);
+                size_t delete1 = distance(i + 1, j, cache, str1, str2, threshold);
+                size_t delete2 = distance(i, j + 1, cache, str1, str2, threshold);
+                d = 1 + MIN(substitution, MIN(delete1, delete2));
             }
         }
         CACHE_AT(i, j) = d;
         STATE_AT(i, j) = SET;
-        THRES_AT(i, j) = threshold;
     }
     return CACHE_AT(i, j);
 }
@@ -64,19 +55,17 @@ struct result_or_error partial_match_sized(
 ) {
     struct result_or_error result;
     struct _cache cache = {
-        .array = calloc((n1 + 1) * (n2 + 1), sizeof(size_t)),
-        .state = calloc((n1 + 1) * (n2 + 1), sizeof(size_t)),
-        .thres = calloc((n1 + 1) * (n2 + 1), sizeof(size_t)),
+        .array = calloc(n1 * n2, sizeof(size_t)),
+        .state = calloc(n1 * n2, sizeof(size_t)),
         .dim = {n1, n2},
     };
     if (cache.array && cache.state) {
-        result = ULLONG_RESULT(distance(0, 0, &cache, str1, str2, threshold));
+        result = ULLONG_RESULT(MIN(threshold, distance(0, 0, &cache, str1, str2, threshold)));
     } else {
         result = ERROR(LEVENSHTEIN_ALLOC_FAILED);
     }
     free(cache.array);
     free(cache.state);
-    free(cache.thres);
     return result;
 }
 
