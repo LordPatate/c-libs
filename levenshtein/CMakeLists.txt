@@ -8,6 +8,7 @@ target_sources(Levenshtein
         FILES
             levenshtein.h
 )
+add_subdirectory(res_or_err)
 target_link_libraries(Levenshtein
 PUBLIC
     ResOrErr
@@ -21,7 +22,7 @@ PUBLIC
 add_executable(TestLevenshtein)
 target_sources(TestLevenshtein
 PRIVATE
-    test/main.c
+    test/functional.c
 )
 target_link_libraries(TestLevenshtein
 PUBLIC
@@ -32,10 +33,23 @@ PUBLIC
     -Wall
     -Wextra
     -g
-    )
+)
 target_link_options(TestLevenshtein
 PUBLIC
     -fsanitize=address
 )
 
-add_subdirectory(res_or_err)
+add_executable(TestLevenshteinPerf)
+target_sources(TestLevenshteinPerf
+PRIVATE
+    test/performance.c
+)
+target_link_libraries(TestLevenshteinPerf
+PUBLIC
+    Levenshtein
+)
+target_compile_options(TestLevenshteinPerf
+PUBLIC
+    -Wall
+    -Wextra
+)

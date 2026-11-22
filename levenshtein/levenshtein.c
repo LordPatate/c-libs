@@ -11,47 +11,41 @@ struct _cache {
     size_t dim[2];
 };
 
-#define CACHE_AT(i, j) cache->array[(i) * cache->dim[1] + (j)]
-#define STATE_AT(i, j) cache->state[(i) * cache->dim[1] + (j)]
+#define _AT(i, j) (i) * cache->dim[1] + (j)
 #define MIN(a, b) ((a) < (b) ? (a) : (b))
 #define MAX(a, b) ((a) > (b) ? (a) : (b))
 
-static size_t distance(
+static size_t distance_cached(
     size_t i, size_t j,
-    struct _cache *cache,
-    const char *str1,
-    const char *str2,
-    size_t threshold
-) {
-    if (i == cache->dim[0]) {
-        return cache->dim[1] - j;
-    }
-    if (j == cache->dim[1]) {
-        return cache->dim[0] - i;
-    }
-    if (STATE_AT(i, j) == NEW || CACHE_AT(i, j) < threshold) {
-        size_t d = threshold;
-        if (str1[i] == str2[j]) {
-            d = distance(i + 1, j + 1, cache, str1, str2, threshold);
-        } else { // First chars differ
-            threshold -= 1;
-            if (threshold > 0) {
-                size_t substitution = distance(i + 1, j + 1, cache, str1, str2, threshold);
-                size_t delete1 = distance(i + 1, j, cache, str1, str2, threshold);
-                size_t delete2 = distance(i, j + 1, cache, str1, str2, threshold);
-                d = 1 + MIN(substitution, MIN(delete1, delete2));
-            }
-        }
-        CACHE_AT(i, j) = d;
-        STATE_AT(i, j) = SET;
-    }
-    return CACHE_AT(i, j);
-}
-
-struct result_or_error partial_match_sized(
     const char *str1, size_t n1,
     const char *str2, size_t n2,
-    size_t threshold
+    struct _cache *cache
+) {
+    if (i == n1) {
+        return n2 - j;
+    }
+    if (j == n2) {
+        return n1 - i;
+    }
+    if (cache->state[_AT(i, j)] == NEW) {
+        size_t d;
+        if (str1[i] == str2[j]) {
+            d = distance_cached(i + 1, j + 1, str1, n1, str2, n2, cache);
+        } else { // First chars differ
+            size_t substitution = distance_cached(i + 1, j + 1, str1, n1, str2, n2, cache);
+            size_t delete1 = distance_cached(i + 1, j, str1, n1, str2, n2, cache);
+            size_t delete2 = distance_cached(i, j + 1, str1, n1, str2, n2, cache);
+            d = 1 + MIN(substitution, MIN(delete1, delete2));
+        }
+        cache->array[_AT(i, j)] = d;
+        cache->state[_AT(i, j)] = SET;
+    }
+    return cache->array[_AT(i, j)];
+}
+
+struct result_or_error levenshtein_sized(
+    const char *str1, size_t n1,
+    const char *str2, size_t n2
 ) {
     struct result_or_error result;
     struct _cache cache = {
@@ -60,7 +54,7 @@ struct result_or_error partial_match_sized(
         .dim = {n1, n2},
     };
     if (cache.array && cache.state) {
-        result = ULLONG_RESULT(MIN(threshold, distance(0, 0, &cache, str1, str2, threshold)));
+        result = ULLONG_RESULT(distance_cached(0, 0, str1, n1, str2, n2, &cache));
     } else {
         result = ERROR(LEVENSHTEIN_ALLOC_FAILED);
     }
@@ -69,17 +63,45 @@ struct result_or_error partial_match_sized(
     return result;
 }
 
-struct result_or_error partial_match(const char *str1, const char *str2, size_t threshold) {
-    return partial_match_sized(str1, strlen(str1), str2, strlen(str2), threshold);
-}
-
-struct result_or_error levenshtein_sized(
-    const char *str1, size_t n1,
-    const char *str2, size_t n2
-) {
-    return partial_match_sized(str1, n1, str2, n2, MAX(n1, n2));
-}
-
 struct result_or_error levenshtein(const char *str1, const char *str2) {
     return levenshtein_sized(str1, strlen(str1), str2, strlen(str2));
+}
+
+static size_t distance_with_threshold(
+    size_t i, size_t j,
+    const char *str1, size_t n1,
+    const char *str2, size_t n2,
+    size_t threshold
+) {
+    if (i == n1) {
+        return n2 - j;
+    }
+    if (j == n2) {
+        return n1 - i;
+    }
+    size_t d = threshold;
+    if (str1[i] == str2[j]) {
+        d = distance_with_threshold(i + 1, j + 1, str1, n1, str2, n2, threshold);
+    } else { // First chars differ
+        threshold -= 1;
+        if (threshold > 0) {
+            size_t substitution = distance_with_threshold(i + 1, j + 1, str1, n1, str2, n2, threshold);
+            size_t delete1 = distance_with_threshold(i + 1, j, str1, n1, str2, n2, threshold);
+            size_t delete2 = distance_with_threshold(i, j + 1, str1, n1, str2, n2, threshold);
+            d = 1 + MIN(substitution, MIN(delete1, delete2));
+        }
+    }
+    return d;
+}
+
+size_t partial_match_sized(
+    const char *str1, size_t n1,
+    const char *str2, size_t n2,
+    size_t threshold
+) {
+    return MIN(threshold, distance_with_threshold(0, 0, str1, n1, str2, n2, threshold));
+}
+
+size_t partial_match(const char *str1, const char *str2, size_t threshold) {
+    return partial_match_sized(str1, strlen(str1), str2, strlen(str2), threshold);
 }

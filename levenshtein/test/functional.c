@@ -32,21 +32,15 @@ int test_both(const char *ref, const char *compared, size_t expected) {
 }
 
 int test_threshold(const char *ref, const char *compared, size_t threshold, size_t expected) {
-    struct result_or_error res = partial_match(ref, compared, threshold);
-    if (res.ok) {
-        size_t d = res.result.as_ullong;
-        if (d == threshold) {
-            printf("not a match: %s - %s (distance = %zu >= %zu)\n", ref, compared, d, threshold);
-        } else {
-            printf("partial match: %s - %s (distance = %zu < %zu)\n", ref, compared, d, threshold);
-        }
-        if (d != expected)
-            puts("FAILED");
-        return d == expected;
+    size_t d = partial_match(ref, compared, threshold);
+    if (d == threshold) {
+        printf("not a match: %s - %s (distance = %zu >= %zu)\n", ref, compared, d, threshold);
     } else {
-        printf("Levenshtein failed (exit status %d).\n", res.error);
-        return 0;
+        printf("partial match: %s - %s (distance = %zu < %zu)\n", ref, compared, d, threshold);
     }
+    if (d != expected)
+        puts("FAILED");
+    return d == expected;
 }
 
 int test_both_threshold(const char *ref, const char *compared, size_t threshold, size_t expected) {
